@@ -3,13 +3,15 @@ package drt.client.components
 import drt.client.logger.{Logger, LoggerFactory}
 import drt.shared.Nationality
 import drt.shared.api.PassengerInfoSummary
-import japgolly.scalajs.react.ScalaComponent
+import japgolly.scalajs.react.{CtorType, ScalaComponent}
+import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.html_<^._
 
 object NationalityFinderComponent {
+  def isRedListCountry(country: String): Boolean = redList.keys.exists(_.toLowerCase == country.toLowerCase)
 
   val log: Logger = LoggerFactory.getLogger(getClass.getName)
-  val component = ScalaComponent.builder[Props]("FlightChart")
+  val component: Component[Props, Unit, Unit, CtorType.Props] = ScalaComponent.builder[Props]("FlightChart")
     .render_P(p => {
 
       val nats = p.ofInterest.map(n => p.passengerInfo.nationalities.getOrElse(n, 0)).sum

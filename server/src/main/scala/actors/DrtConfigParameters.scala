@@ -74,11 +74,11 @@ case class DrtConfigParameters(config: Configuration) {
   val maybeGlaLivePassword: Option[String] = config.getOptional[String]("feeds.gla.password")
   val maybeGlaLiveUsername: Option[String] = config.getOptional[String]("feeds.gla.username")
 
-  val useApiPaxNos: Boolean = config.getOptional[Boolean]("feature-flags.use-api-pax-nos").getOrElse(false)
+  val useApiPaxNos: Boolean = config.get[Boolean]("feature-flags.use-api-pax-nos")
+  val displayRedListInfo: Boolean = config.get[Boolean]("feature-flags.display-red-list-info")
 
-  val enableToggleDisplayWaitTimes: Boolean = config
-    .getOptional[Boolean]("feature-flags.enable-toggle-display-wait-times").getOrElse(false)
-  val adjustEGateUseByUnder12s: Boolean = config.getOptional[Boolean]("feature-flags.adjust-egates-use-by-u12s").getOrElse(false)
+  val enableToggleDisplayWaitTimes: Boolean = config.get[Boolean]("feature-flags.enable-toggle-display-wait-times")
+  val adjustEGateUseByUnder12s: Boolean = config.get[Boolean]("feature-flags.adjust-egates-use-by-u12s")
 
   val maybeLcySoapEndPointUrl: Option[String] = config.getOptional[String]("feeds.lcy.soap.endPointUrl")
   val lcyLiveEndPointUrl: String = config.get[String]("feeds.lcy.live.endPointUrl")

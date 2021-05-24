@@ -41,7 +41,7 @@ object TerminalContentComponent {
                    viewMode: ViewMode,
                    loggedInUser: LoggedInUser,
                    minuteTicker: Int,
-                   featureFlags: Pot[Map[String, Boolean]],
+                   featureFlags: Pot[FeatureFlags],
                    arrivalSources: Option[(UniqueArrival, Pot[List[Option[FeedSourceArrival]]])],
                    potWalkTimes: Pot[WalkTimes]
                   )
@@ -174,10 +174,6 @@ object TerminalContentComponent {
                             props.airportConfig,
                             props.terminalPageTab,
                             props.showActuals,
-                            showWaitTime = features.get("enable-toggle-display-wait-times") match {
-                              case Some(true) => false
-                              case _ => true
-                            },
                             props.viewMode,
                             props.loggedInUser,
                             features
@@ -188,18 +184,21 @@ object TerminalContentComponent {
                   <.div(^.id := "arrivals", ^.className := s"tab-pane in $arrivalsPanelActive", {
                     if (state.activeTab == "arrivals") {
                       val flightsForTerminal = filteredPortState.flights.values.toList
-                      arrivalsTableComponent(
-                        FlightsWithSplitsTable.Props(
-                          flightsForTerminal,
-                          passengerInfoByDay,
-                          queueOrder,
-                          props.airportConfig.hasEstChox,
-                          props.arrivalSources,
-                          props.loggedInUser,
-                          props.viewMode,
-                          walkTimes,
-                          props.airportConfig.defaultWalkTimeMillis(props.terminalPageTab.terminal),
-                          props.airportConfig.hasTransfer,
+                      props.featureFlags.render(features =>
+                        arrivalsTableComponent(
+                          FlightsWithSplitsTable.Props(
+                            flightsForTerminal,
+                            passengerInfoByDay,
+                            queueOrder,
+                            props.airportConfig.hasEstChox,
+                            props.arrivalSources,
+                            props.loggedInUser,
+                            props.viewMode,
+                            walkTimes,
+                            props.airportConfig.defaultWalkTimeMillis(props.terminalPageTab.terminal),
+                            props.airportConfig.hasTransfer,
+                            features.displayRedListInfo
+                          )
                         )
                       )
                     } else ""

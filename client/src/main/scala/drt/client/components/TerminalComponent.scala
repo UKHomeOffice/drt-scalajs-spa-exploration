@@ -42,7 +42,7 @@ object TerminalComponent {
                             viewMode: ViewMode,
                             minuteTicker: Int,
                             maybeStaffAdjustmentsPopoverState: Option[StaffAdjustmentDialogueState],
-                            featureFlags: Pot[Map[String, Boolean]],
+                            featureFlags: Pot[FeatureFlags],
                             arrivalSources: Option[(UniqueArrival, Pot[List[Option[FeedSourceArrival]]])],
                             potWalkTimes: Pot[WalkTimes]
                           ) extends UseValueEq

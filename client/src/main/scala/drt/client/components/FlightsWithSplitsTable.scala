@@ -6,7 +6,7 @@ import drt.client.actions.Actions.{GetArrivalSources, GetArrivalSourcesForPointI
 import drt.client.components.FlightComponents.SplitsGraph
 import drt.client.components.FlightTableRow.SplitsGraphComponentFn
 import drt.client.components.ToolTips._
-import drt.client.components.styles.{ArrivalsPageStyles, ArrivalsPageStylesDefault}
+import drt.client.components.styles.ArrivalsPageStylesDefault
 import drt.client.services.JSDateConversions.SDate
 import drt.client.services._
 import drt.shared.CrunchApi.MillisSinceEpoch
@@ -21,9 +21,9 @@ import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
 import japgolly.scalajs.react.vdom.{TagMod, TagOf, html_<^}
 import japgolly.scalajs.react.{CtorType, _}
 import org.scalajs.dom.html.{Div, Span, TableSection}
+import scalacss.ScalaCssReact
 import uk.gov.homeoffice.drt.auth.LoggedInUser
-import uk.gov.homeoffice.drt.auth.Roles.{ArrivalSource, RedListFeature}
-import scalacss.{ScalaCssReact, ScalaCssReactFns, ScalaCssReactImplicits}
+import uk.gov.homeoffice.drt.auth.Roles.ArrivalSource
 
 import scala.collection.immutable.Map
 
@@ -39,7 +39,8 @@ object FlightsWithSplitsTable {
                    viewMode: ViewMode,
                    walkTimes: WalkTimes,
                    defaultWalkTime: Long,
-                   hasTransfer: Boolean
+                   hasTransfer: Boolean,
+                   displayRedListInfo: Boolean,
                   )
 
   implicit val propsReuse: Reusability[Props] = Reusability.by((props: Props) => {
@@ -91,20 +92,21 @@ object FlightsWithSplitsTable {
                     .flatMap(_.get(ArrivalKey(flightWithSplits.apiFlight)))
 
                   FlightTableRow.component(FlightTableRow.Props(
-                    flightWithSplits,
-                    maybePassengerInfo,
-                    codeShares,
-                    idx,
+                    flightWithSplits = flightWithSplits,
+                    maybePassengerInfoSummary = maybePassengerInfo,
+                    codeShares = codeShares,
+                    idx = idx,
                     timelineComponent = timelineComponent,
                     originMapper = originMapper,
                     splitsGraphComponent = splitsGraphComponent,
                     splitsQueueOrder = props.queueOrder,
                     hasEstChox = props.hasEstChox,
-                    props.loggedInUser,
-                    props.viewMode,
-                    props.walkTimes,
-                    props.defaultWalkTime,
-                    props.hasTransfer
+                    loggedInUser = props.loggedInUser,
+                    viewMode = props.viewMode,
+                    walkTimes = props.walkTimes,
+                    defaultWalkTime = props.defaultWalkTime,
+                    hasTransfer = props.hasTransfer,
+                    displayRedListInfo = props.displayRedListInfo
                   ))
               }.toTagMod)
           ),
@@ -140,7 +142,7 @@ object FlightsWithSplitsTable {
         case (label, _) => label != "Est Chox" || props.hasEstChox
       }
       .filter {
-        case (label, _) => label != redListPassportHeading || props.loggedInUser.hasRole(RedListFeature)
+        case (label, _) => label != redListPassportHeading || props.displayRedListInfo
       }
       .map {
         case (label, None) if label == "Flight" => <.th(
@@ -210,7 +212,8 @@ object FlightTableRow {
                    viewMode: ViewMode,
                    walkTimes: WalkTimes,
                    defaultWalkTime: Long,
-                   hasTransfer: Boolean
+                   hasTransfer: Boolean,
+                   displayRedListInfo: Boolean,
                   )
 
   case class RowState(hasChanged: Boolean)
@@ -275,7 +278,6 @@ object FlightTableRow {
         )
 
       val firstCells = List[TagMod](
-
         <.td(
           ^.className := flightCodeClass,
           <.div(
@@ -288,17 +290,15 @@ object FlightTableRow {
             else EmptyVdom
           )
         ),
-
         <.td(props.originMapper(flight.Origin)),
         <.td(TerminalContentComponent.airportWrapper(flight.Origin) { proxy: ModelProxy[Pot[AirportInfo]] =>
           <.span(
             proxy().renderEmpty(<.span()),
             proxy().render(ai => {
-              val style = if (NationalityFinderComponent.redList.keys.exists(_.toLowerCase == ai.country.toLowerCase)) {
+              val style = if (props.displayRedListInfo && NationalityFinderComponent.isRedListCountry(ai.country)) {
                 ScalaCssReact.scalacssStyleaToTagMod(
                 ArrivalsPageStylesDefault.redListCountryField)
-              } else
-                EmptyVdom
+              } else EmptyVdom
 
               <.span(
                 style,
@@ -307,7 +307,7 @@ object FlightTableRow {
             })
           )
         }),
-        if (props.loggedInUser.hasRole(RedListFeature))
+        if (props.displayRedListInfo)
           <.td(props.maybePassengerInfoSummary.map(
             info => NationalityFinderComponent(NationalityFinderComponent.Props(NationalityFinderComponent.redListNats, info))))
         else

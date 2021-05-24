@@ -26,7 +26,7 @@ object PortDashboardPage {
   case class PortDashboardModel(
                                  airportConfig: Pot[AirportConfig],
                                  portState: Pot[PortState],
-                                 featureFlags: Pot[Map[String, Boolean]]
+                                 featureFlags: Pot[FeatureFlags]
                                )
 
   val component: Component[Props, Unit, Unit, CtorType.Props] = ScalaComponent.builder[Props]("PortDashboard")

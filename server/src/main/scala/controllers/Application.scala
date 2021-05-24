@@ -67,8 +67,6 @@ trait AirportConfProvider extends AirportConfiguration {
   val portCode: PortCode = PortCode(ConfigFactory.load().getString("portcode").toUpperCase)
   val config: Configuration
 
-  def useStaffingInput: Boolean = config.getOptional[String]("feature-flags.use-v2-staff-input").isDefined
-
   def contactEmail: Option[String] = config.getOptional[String]("contact-email")
 
   def oohPhone: Option[String] = config.getOptional[String]("ooh-phone")

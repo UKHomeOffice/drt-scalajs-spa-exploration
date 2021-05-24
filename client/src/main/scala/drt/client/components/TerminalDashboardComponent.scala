@@ -33,7 +33,7 @@ object TerminalDashboardComponent {
                     router: RouterCtl[Loc],
                     portState: PortState,
                     passengerInfoSummary: Map[UtcDate, Map[ArrivalKey, PassengerInfoSummary]],
-                    featureFlags: Pot[Map[String, Boolean]],
+                    featureFlags: Pot[FeatureFlags],
                     walkTimes: Pot[WalkTimes],
                     loggedInUser: LoggedInUser
                   )
@@ -79,6 +79,7 @@ object TerminalDashboardComponent {
             <.div(^.className := "dashboard-arrivals-popup",
               <.h2("Arrivals"),
               <.div(^.className := "terminal-dashboard__arrivals_popup_table",
+                p.featureFlags.renderReady(featureFlags =>
                 p.walkTimes.renderReady(walkTimes =>
                   FlightsWithSplitsTable.ArrivalsTable(
                     None,
@@ -95,8 +96,9 @@ object TerminalDashboardComponent {
                       walkTimes,
                       p.airportConfig.defaultWalkTimeMillis(p.terminalPageTabLoc.terminal),
                       hasTransfer = p.airportConfig.hasTransfer,
+                      displayRedListInfo = featureFlags.displayRedListInfo
                     )
-                  ))),
+                  )))),
               p.router.link(closeArrivalsPopupLink)(^.className := "close-arrivals-popup btn btn-default", "close")
             ))
 
@@ -175,7 +177,7 @@ object TerminalDashboardComponent {
             portState: PortState,
             passengerInfoSummaryByDay: Map[UtcDate, Map[ArrivalKey, PassengerInfoSummary]],
             router: RouterCtl[Loc],
-            featureFlags: Pot[Map[String, Boolean]],
+            featureFlags: Pot[FeatureFlags],
             potWalktTimes: Pot[WalkTimes],
             loggedInUser: LoggedInUser,
            ): VdomElement =

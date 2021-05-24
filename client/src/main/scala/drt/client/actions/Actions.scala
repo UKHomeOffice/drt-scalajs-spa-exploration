@@ -68,7 +68,7 @@ object Actions {
 
   case object GetFeatureFlags extends Action
 
-  case class UpdateFeatureFlags(featureFlags: Map[String, Boolean]) extends Action
+  case class UpdateFeatureFlags(featureFlags: FeatureFlags) extends Action
 
   case object GetContactDetails extends Action
 

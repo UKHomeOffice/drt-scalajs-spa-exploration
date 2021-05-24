@@ -11,17 +11,18 @@ import akka.util.Timeout
 import drt.shared._
 import manifests.passengers.BestAvailableManifest
 import manifests.{ManifestLookupLike, UniqueArrivalKey}
+import passengersplits.parsing.VoyageManifestParser.VoyageManifests
 import play.api.Configuration
 import play.api.mvc.{Headers, Session}
 import server.feeds.ArrivalsFeedResponse
 import services.SDate
 import test.TestActors.{TestStaffMovementsActor, _}
-import test.feeds.test.{CSVFixtures, TestArrivalsActor, TestFixtureFeed, TestManifestsActor}
+import test.feeds.test.{CSVFixtures, MockManifest, TestArrivalsActor, TestFixtureFeed, TestManifestsActor}
 import test.roles.TestUserRoleProvider
 import uk.gov.homeoffice.drt.auth.Roles.Role
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.language.postfixOps
 import scala.util.Success
 
@@ -127,13 +128,20 @@ case class TestDrtSystem(airportConfig: AirportConfig)
   config.getOptional[String]("test.live_fixture_csv").foreach { file =>
     implicit val timeout: Timeout = Timeout(250 milliseconds)
     log.info(s"Loading fixtures from $file")
-    val testActor = system.actorSelection(s"akka://${airportConfig.portCode.iata.toLowerCase}-drt-actor-system/user/TestActor-LiveArrivals").resolveOne()
     system.scheduler.schedule(1 second, 1 day)({
-      val day = SDate.now().toISODateOnly
-      CSVFixtures.csvPathToArrivalsOnDate(day, file).collect {
-        case Success(arrival) =>
-          testActor.map(_ ! arrival)
-      }
+      val startDay = SDate.now()
+      DateRange.utcDateRange(startDay, startDay.addDays(30)).map(day => {
+        val arrivals = CSVFixtures.csvPathToArrivalsOnDate(day.toISOString, file)
+          .collect {
+            case Success(arrival) => arrival
+          }
+        arrivals.map(testArrivalActor.ask)
+
+        val manifests = arrivals.map(a => {
+          MockManifest.manifestForArrival(a)
+        })
+        Await.ready(testManifestsActor.ask(VoyageManifests(manifests.toSet)), 5 seconds)
+      })
     })
   }
 

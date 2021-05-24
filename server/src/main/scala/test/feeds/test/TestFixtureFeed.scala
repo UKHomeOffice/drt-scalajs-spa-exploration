@@ -62,12 +62,11 @@ class TestArrivalsActor extends Actor with ActorLogging {
         case Some(existing) => Option(existing :+ a)
       }
 
-      log.info(s"TEST: Arrivals now equal $testArrivals")
       sender() ! Ack
 
     case GetArrivals =>
       val toSend = Arrivals(testArrivals.getOrElse(List()))
-      if (toSend.arrivals.nonEmpty) log.info(s"Sending test arrivals: ${toSend.arrivals}")
+      if (toSend.arrivals.nonEmpty) log.info(s"Sending test arrivals: ${toSend.arrivals.size}")
       sender() ! toSend
       testArrivals = None
 

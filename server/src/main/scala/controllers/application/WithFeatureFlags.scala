@@ -1,6 +1,7 @@
 package controllers.application
 
 import controllers.Application
+import drt.shared.FeatureFlags
 import play.api.mvc.{Action, AnyContent}
 
 
@@ -10,10 +11,10 @@ trait WithFeatureFlags {
   def getFeatureFlags: Action[AnyContent] = Action { _ =>
     import upickle.default._
 
-    val frontendFeatures = Map (
-      "use-api-pax-nos" -> ctrl.params.useApiPaxNos,
-      "enable-toggle-display-wait-times" -> ctrl.params.enableToggleDisplayWaitTimes
-    )
+    val frontendFeatures = FeatureFlags(
+      useApiPaxNos = ctrl.params.useApiPaxNos,
+      displayWaitTimesToggle = ctrl.params.enableToggleDisplayWaitTimes,
+      displayRedListInfo = ctrl.params.displayRedListInfo)
 
     Ok(write(frontendFeatures))
   }

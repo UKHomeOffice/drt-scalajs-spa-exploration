@@ -40,10 +40,9 @@ object TerminalDesksAndQueues {
                    airportConfig: AirportConfig,
                    terminalPageTab: TerminalPageTabLoc,
                    showActuals: Boolean,
-                   showWaitTime: Boolean,
                    viewMode: ViewMode,
                    loggedInUser: LoggedInUser,
-                   featureFlags: Map[String, Boolean]
+                   featureFlags: FeatureFlags
                   ) extends UseValueEq
 
   sealed trait ViewType {
@@ -88,7 +87,7 @@ object TerminalDesksAndQueues {
         val headings = state.viewType match {
           case ViewDeps =>
             val h = List(<.th(
-              s"Dep ${deskUnitLabel(queueName)}", " ", depBanksOrDesksTip(queueName) ,^.className := queueColumnClass)
+              s"Dep ${deskUnitLabel(queueName)}", " ", depBanksOrDesksTip(queueName), ^.className := queueColumnClass)
             )
             if (showWaitColumn)
               h :+ <.th("Est wait", " ", estWaitTooltip, ^.className := queueColumnClass)
@@ -114,7 +113,7 @@ object TerminalDesksAndQueues {
 
         List(queueSubHeadings,
           <.th(^.className := "non-pcp", "Misc", " ", miscTooltip),
-          <.th(^.className := "non-pcp", "Moves"," ", movesTooltip),
+          <.th(^.className := "non-pcp", "Moves", " ", movesTooltip),
           <.th(^.className := "total-deployed", "Rec", " ", recToolTip),
           <.th(^.className := "total-deployed", "Dep"),
           <.th(^.className := "total-deployed", "Avail", " ", availTooltip, ^.colSpan := 2))
@@ -215,7 +214,7 @@ object TerminalDesksAndQueues {
           } else "",
           StaffMissingWarningComponent(terminalStaffMinutes, props.loggedInUser, props.router, props.terminalPageTab),
           viewTypeControls(viewDepsClass, viewRecsClass),
-          if(props.featureFlags.getOrElse("enable-toggle-display-wait-times", false)) viewWaitTimeControls else ""
+          if (props.featureFlags.displayWaitTimesToggle) viewWaitTimeControls else ""
         ),
         <.table(
           ^.id := "sticky",
@@ -250,7 +249,7 @@ object TerminalDesksAndQueues {
   }
 
   val component = ScalaComponent.builder[Props]("Loader")
-    .initialStateFromProps(p => State(showActuals = p.airportConfig.hasActualDeskStats && p.showActuals, p.terminalPageTab.viewType, showWaitColumn = p.showWaitTime))
+    .initialStateFromProps(p => State(showActuals = p.airportConfig.hasActualDeskStats && p.showActuals, p.terminalPageTab.viewType, showWaitColumn = !p.featureFlags.displayWaitTimesToggle))
     .renderBackend[Backend]
     .configure(Reusability.shouldComponentUpdate)
     .componentDidMount(_ => StickyTableHeader("[data-sticky]"))
